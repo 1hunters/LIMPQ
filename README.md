@@ -20,7 +20,7 @@ In Progress
 
 
 
-## ILP-based Mixed-Precision Searching
+### ILP-based Mixed-Precision Searching
 
 In Progress
 
