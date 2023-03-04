@@ -22,7 +22,7 @@ from process import start_cal_bn, train, validate, PerformanceScoreboard
 def main():
     script_dir = Path.cwd()
     args = util.get_config(default_file=script_dir /
-                           'config_mbv1.yaml')
+                           'finetune_resnet50_w3a4_12.2compression_ratio.yaml')
     
     monitors = None
     assert args.training_device == 'gpu', 'NOT SUPPORT CPU TRAINING NOW'

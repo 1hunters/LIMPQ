@@ -33,7 +33,8 @@ def switch_bn(model, uniform_bit_width):
 def set_uniform_policy_mode(model, quan_scheduler, uniform_bit_width):
     for name, module in model.named_modules():
         if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear)):
-            if ".".join(name.split(".")[1:]) not in quan_scheduler.excepts:
+            name_without_module = ".".join(name.split(".")[1:])
+            if name_without_module not in quan_scheduler.excepts:
                 setattr(module, 'bits', uniform_bit_width)
     switch_bn(model, uniform_bit_width)
 
@@ -43,18 +44,17 @@ def sample_and_activate_one_sampled_policy(model, quan_scheduler, bits_l=[]):
     sampled_random_bit_width = max(bits_l)
 
     for name, module in model.named_modules():
-        name = ".".join(name.split(".")[1:])
+        name_without_module = ".".join(name.split(".")[1:])
+
         if isinstance(module, torch.nn.Conv2d):
-            if name not in quan_scheduler.excepts:
+            if name_without_module not in quan_scheduler.excepts:
                 sampled_random_bit_width = random.choice(bits_l)
                 setattr(module, 'bits', sampled_random_bit_width)
                 config.append(sampled_random_bit_width)
-        
         elif isinstance(module, SwithableBatchNorm):
-            if name not in quan_scheduler.excepts:
+            if name_without_module not in quan_scheduler.excepts:
                 module.switch_bn(sampled_random_bit_width)
                 module.mixed_flags = True
-
     return config
 
 
@@ -88,12 +88,13 @@ def update_meter(meter, loss, acc1, acc5, size, batch_time, world_size):
 
 def train(train_loader, model, criterion, optimizer, lr_scheduler, epoch, monitors, args, distill_criterion=None, alpha=1):
     target_bits = args.target_bits
+
     meters = [{
         'loss': AverageMeter(),
         'top1': AverageMeter(),
         'top5': AverageMeter(),
         'batch_time': AverageMeter()
-    } for _ in range(len(target_bits))]
+    } for _ in range(len(target_bits) + 1)] # one for random sampling
 
     total_sample = len(train_loader.sampler)
     batch_size = args.dataloader.batch_size
@@ -130,8 +131,7 @@ def train(train_loader, model, criterion, optimizer, lr_scheduler, epoch, monito
                 loss = criterion(outputs, targets)
 
             acc1, acc5 = accuracy(outputs.data, targets.data, topk=(1, 5))
-            update_meter(meters[idx], loss, acc1, acc5,
-                         inputs.size(0), time.time() - start_time, args.world_size)
+            update_meter(meters[idx], loss, acc1, acc5, inputs.size(0), time.time() - start_time, args.world_size)
 
             loss.backward()
         
@@ -170,16 +170,6 @@ def train(train_loader, model, criterion, optimizer, lr_scheduler, epoch, monito
                         p + 'LR': optimizer.param_groups[0]['lr']
                     })
 
-            for name, module in model.named_modules():
-                    if isinstance(module, nn.Conv2d):
-                        for na, sub_module in module.named_modules():
-                            if isinstance(sub_module, LsqQuan):
-                                dic = {}
-                                for i in range(len(sub_module.s)):
-                                    key = name + "_" + na + "_" + str(sub_module.bit_list[i])
-                                    dic[key] = sub_module.s[i].detach().cpu().item()
-
-                                monitors[1].update(epoch, batch_idx+1, steps_per_epoch, name + "_" + na + ' Training', dic)
             logger.info(
                 "--------------------------------------------------------------------------------------------------------------")
     if args.local_rank == 0:
@@ -189,7 +179,7 @@ def train(train_loader, model, criterion, optimizer, lr_scheduler, epoch, monito
         
     if hasattr(optimizer, 'sync_lookahead'):
         optimizer.sync_lookahead()
-    return meters[0]['top1'].max, meters[0]['top5'].max, meters[0]['loss'].avg
+    return meters[0]['top1'].avg, meters[0]['top5'].avg, meters[0]['loss'].avg
 
 
 class PerformanceScoreboard:

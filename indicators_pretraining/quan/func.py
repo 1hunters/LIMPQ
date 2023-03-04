@@ -24,8 +24,8 @@ class QuanConv2d(torch.nn.Conv2d):
             self.bias = torch.nn.Parameter(m.bias.detach())
 
     def forward(self, x):
-        quantized_weight = self.quan_w_fn(self.weight, self.bits, is_activation=False)
-        quantized_act = self.quan_a_fn(x, self.bits, is_activation=True)
+        quantized_weight = self.quan_w_fn(self.weight, self.bits)
+        quantized_act = self.quan_a_fn(x, self.bits)
         
         return F.conv2d(input=quantized_act, weight=quantized_weight, bias=self.bias, stride=self.stride, padding=self.padding, dilation=self.dilation, groups=self.groups)
 
@@ -46,8 +46,8 @@ class QuanLinear(torch.nn.Linear):
         
 
     def forward(self, x):
-        quantized_weight = self.quan_w_fn(self.weight, self.bits, is_activation=False)
-        quantized_act = self.quan_a_fn(x, self.bits, is_activation=True)
+        quantized_weight = self.quan_w_fn(self.weight, self.bits)
+        quantized_act = self.quan_a_fn(x, self.bits)
         return F.linear(quantized_act, quantized_weight, self.bias)
 
 

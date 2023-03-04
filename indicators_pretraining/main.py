@@ -54,7 +54,7 @@ def main():
 
     if args.distributed:
         args.device = 'cuda:%d' % args.local_rank
-        os.environ['MASTER_PORT'] = '12355'
+        # os.environ['MASTER_PORT'] = '12355'
         torch.cuda.set_device(args.local_rank)
         torch.distributed.init_process_group(backend='nccl', init_method='env://')
         args.world_size = torch.distributed.get_world_size()
@@ -70,8 +70,8 @@ def main():
     model = quan.replace_module_by_names(model, modules_to_replace)
 
     if args.local_rank == 0:
-        tbmonitor.writer.add_graph(
-            model, input_to_model=torch.randn((1, 3, 224, 224)))
+        # tbmonitor.writer.add_graph(
+        #     model, input_to_model=torch.randn((1, 3, 224, 224)))
         logger.info('Inserted quantizers into the original model')
 
     model.cuda()
@@ -107,7 +107,7 @@ def main():
         logger.info(('Optimizer: %s' % optimizer).replace(
             '\n', '\n' + ' ' * 11))
         # print(optimizer.get_params())
-        logger.info('Total epoch: %d, Start epoch %d, Val cycle: %d', num_epochs, start_epoch, args.val_cycle)
+        logger.info('Total epoch: %d, Start epoch %d', num_epochs, start_epoch)
     perf_scoreboard = PerformanceScoreboard(args.log.num_best_scores)
     
     if start_epoch > 0:
@@ -128,7 +128,7 @@ def main():
             distribute_bn(model, args.world_size, True)
 
         if lr_scheduler is not None:
-            lr_scheduler.step(epoch+1, v_loss)
+            lr_scheduler.step(epoch+1, t_loss)
         if args.local_rank == 0:
             tbmonitor.writer.add_scalars(
                 'Train_vs_Validation/Loss', {'train': t_loss}, epoch)

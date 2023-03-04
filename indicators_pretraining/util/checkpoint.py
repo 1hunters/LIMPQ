@@ -1,7 +1,7 @@
 import logging
 import os
 
-import torch as t
+import torch
 
 logger = logging.getLogger()
 
@@ -40,10 +40,10 @@ def save_checkpoint(epoch, arch, model, extras=None, is_best=None, name=None, ou
 
     msg = 'Saving checkpoint to:\n'
     msg += '             Current: %s\n' % filepath
-    t.save(checkpoint, filepath)
+    torch.save(checkpoint, filepath)
     if is_best:
         msg += '                Best: %s\n' % filepath_best
-        t.save(checkpoint, filepath_best)
+        torch.save(checkpoint, filepath_best)
     logger.info(msg)
 
 
@@ -63,7 +63,7 @@ def load_checkpoint(model, chkp_file, model_device=None, strict=True, lean=False
     if not os.path.isfile(chkp_file):
         raise IOError('Cannot find a checkpoint at', chkp_file)
 
-    checkpoint = t.load(chkp_file, map_location=lambda storage, loc: storage)
+    checkpoint = torch.load(chkp_file, map_location=lambda storage, loc: storage)
 
     if 'state_dict' not in checkpoint:
         raise ValueError('Checkpoint must contain model parameters')

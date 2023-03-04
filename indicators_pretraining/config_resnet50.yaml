@@ -58,7 +58,7 @@ quan:
   weight: 
     mode: lsq
     bit: 2
-    per_channel: true
+    per_channel: false
     symmetric: false
     all_positive: false
   

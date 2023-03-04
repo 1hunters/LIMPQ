@@ -28,8 +28,8 @@ class QuanConv2d(torch.nn.Conv2d):
         self.quan_w_fn.init_from(m.weight, self.wbits)
         self.quan_a_fn.init_from(None, self.abits)
 
-        self.weight_norm = True
-        self.act_rescale = True
+        self.weight_norm = False
+        self.act_rescale = False
 
         if self.act_rescale:
             self.act_rescale_p = nn.Parameter(torch.ones(1))
