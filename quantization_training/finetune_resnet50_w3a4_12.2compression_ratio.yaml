@@ -1,0 +1,108 @@
+# Experiment name
+name: resnet18_65432_w3a3
+weight_bits: [6, 3, 4, 5, 4, 4, 5, 4, 4, 5, 4, 3, 4, 3, 3, 3, 4, 4, 3, 4, 4, 3, 4, 3, 2, 3, 2, 3, 2, 3, 3, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+act_bits:    [6, 4, 6, 6, 6, 3, 4, 6, 3, 4, 5, 3, 5, 5, 6, 3, 4, 5, 3, 4, 5, 3, 4, 4, 4, 6, 5, 5, 4, 5, 5, 4, 6, 5, 3, 5, 6, 3, 5, 6, 3, 6, 4, 4, 6, 2, 6, 4, 6, 6, 4, 6]
+
+gpu: a100_40g
+
+# Name of output directory. Checkpoints and logs will be saved at `pwd`/output_dir
+output_dir: out
+
+training_device: gpu
+
+# Dataset loader
+dataloader:
+  # Dataset to train/validate (choices: imagenet, cifar10)
+  dataset: imagenet
+  # Number of categories in the specified dataset (choices: 1000, 10)
+  num_classes: 1000
+  # Path to dataset directory
+  path: /path/to/imagenet
+  # Size of mini-batch
+  batch_size: 128
+  # Number of data loading workers
+  workers: 8
+  # Seeds random generators in a deterministic way (i.e., set all the seeds 0).
+  # Please keep it true when resuming the experiment from a checkpoint
+  deterministic: true
+  # Load the model without DataParallel wrapping it
+  serialized: false
+  # Portion of training dataset to set aside for validation (range: [0, 1))
+  val_split: 0.02
+
+resume:
+  path: 
+  lean: false
+
+log:
+  # Number of best scores to track and report
+  num_best_scores: 3
+  # Print frequency
+  print_freq: 20
+
+#============================ Model ============================================
+
+arch: resnet50
+freeze_weights: False
+# Use pre-trained model
+pre_trained: True
+
+#============================ Quantization =====================================
+
+quan:
+  act: 
+    mode: lsq
+    bit: 2
+    per_channel: false
+    symmetric: false
+    all_positive: true
+
+  weight: 
+    mode: lsq
+    bit: 2
+    per_channel: false
+    symmetric: false
+    all_positive: false
+  
+  excepts:
+    # Specify quantized bit width for some layers, like this:
+    conv1:
+      act:
+        bit: 
+        all_positive: false
+      weight:
+        bit:
+    fc:
+      act:
+        bit:
+      weight:
+        bit:
+
+#============================ Training / Evaluation ============================
+
+# Evaluate the model without training
+# If this field is true, all the bellowing options will be ignored
+eval: false
+fp_model: false
+
+# Optimizer
+epochs: 90
+smoothing: 0.1
+
+# Optimizer
+opt: sgd
+lr: 0.04
+momentum: 0.9
+weight_decay: 0.000025
+
+# Learning rate scheduler
+sched: cosine
+min_lr: 0.00001
+decay_rate: 0.1
+warmup_epochs: 5
+warmup_lr: 0.00001
+decay_epochs: 30
+cooldown_epochs: 5
+
+# Training method
+val_cycle: 25

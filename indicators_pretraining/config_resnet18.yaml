@@ -1,0 +1,107 @@
+# Experiment name
+name: resnet18_65432
+target_bits: [6, 5, 4, 3, 2]
+
+gpu: v100_32g
+
+output_dir: out
+
+training_device: gpu
+
+# Dataset loader
+dataloader:
+  # Dataset to train/validate (choices: imagenet, cifar10)
+  dataset: imagenet
+  # Number of categories in the specified dataset (choices: 1000, 10)
+  num_classes: 1000
+  # Path to dataset directory
+  path: /path/to/imagenet
+  # Size of mini-batch
+  batch_size: 256
+  # Number of data loading workers
+  workers: 16
+  # Seeds random generators in a deterministic way (i.e., set all the seeds 0).
+  # Please keep it true when resuming the experiment from a checkpoint
+  deterministic: true
+  # Load the model without DataParallel wrapping it
+  serialized: false
+  # Portion of training dataset to set aside for validation (range: [0, 1))
+  val_split: 0.02
+
+resume:
+  path: 
+  lean: false
+
+log:
+  # Number of best scores to track and report
+  num_best_scores: 3
+  # Print frequency
+  print_freq: 20
+
+#============================ Model ============================================
+
+arch: resnet18
+freeze_weights: False 
+# Use pre-trained model
+pre_trained: True
+
+#============================ Quantization =====================================
+
+quan:
+  act: 
+    mode: lsq
+    bit: 2
+    per_channel: false
+    symmetric: false
+    all_positive: true
+
+  weight: 
+    mode: lsq
+    bit: 2
+    per_channel: false
+    symmetric: false
+    all_positive: false
+  
+  excepts:
+    # Specify quantized bit width for some layers, like this. 
+    # For indicators pretraining, please set the first layer and its batchnorm layer, the last layer for exceptions, since these layers are quantized to fixed bits (8bits):
+    conv1:
+      act:
+        bit: 
+        all_positive: false
+      weight:
+        bit:
+    bn1:
+      act:
+        bit:
+      weight:
+        bit:
+    fc:
+      act:
+        bit:
+      weight:
+        bit:
+
+#============================ Training / Evaluation ============================
+
+# Evaluate the model without training
+# If this field is true, all the bellowing options will be ignored
+eval: false
+fp_model: false
+epochs: 5
+smoothing: 0.1
+
+# Optimizer
+opt: sgd
+lr: 0.01
+momentum: 0.9
+weight_decay: 0.000025
+
+# Learning rate scheduler
+sched: cosine
+min_lr: 0.00001
+decay_rate: 0.1
+warmup_epochs: 0
+warmup_lr: 0.00001
+decay_epochs: 40
+cooldown_epochs: 0
