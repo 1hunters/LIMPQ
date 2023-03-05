@@ -60,10 +60,10 @@ class LsqQuan(Quantizer):
         self.all_positive = all_positive
         self.symmetric = symmetric
         self.per_channel = per_channel
-        self.s = torch.nn.Parameter(torch.ones(1))
         self.bit_list = (8, )
         self.bits = 2
         self.scale_gradient = scale_grad
+        self.s = torch.nn.Parameter(torch.ones(len(self.bit_list)))
 
     def init_from(self, x, bit_list, *args, **kwargs):
         self.bit_list = tuple(bit_list)

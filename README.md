@@ -13,7 +13,7 @@ The exponentially large discrete search space in mixed-precision quantization (M
 
 
 ## 2. Importance Indicators Pre-training (One-time Training for Importance Derivation)
-Firstly, we can pre-train the importance indicators for your models, or you can also use our previous indicators (in quantization_search/indicators/importance_indicators_resnet50.pkl). 
+Firstly, you can pre-train the importance indicators for your models, or you can also use our previous indicators (in quantization_search/indicators/importance_indicators_resnet50.pkl). 
 
 ### Pre-train the indicators
 
@@ -27,13 +27,15 @@ Meanwhile, if you want to use your own PyTorch model, you should add it to the *
 
 ### Some Tips 
 
-Pre-training does not require too many epochs, and even does not rely on the full training set, you can try 3~10 epochs and 50% data. 
+- For indicators pretraining, please set the first layer, its batchnorm layer, and the last layer for exceptions (do not be quantized), since these layers are not searchable and are quantized to fixed bits (8bits) during fine-tuning. 
+
+- Pre-training does not require too many epochs, and even does not rely on the full training set, you can try 3~10 epochs and 50% data. 
 
 ### Extract the indicators
 
 You should extract the indicators from the checkpoint after pre-training, since these indicators are ***quantization step-size scale-factors*** —— some learnable PyTorch parameters. This is quite easy, since we can traverse the checkpoint and record all step-size scale factors accordingly. 
 
-In pre-training, the quantization step-size scale-factor for each layer has a specific variable name in the weight/activation quantizer (see indicators_pretraining/quan/quantizer/lsq.py, LINE72). 
+In pre-training, the quantization step-size scale-factor for each layer has a specific variable name in the weight/activation quantizer (see indicators_pretraining/quan/quantizer/lsq.py, LINE66). 
 
 For example, for layer "*module.layer2.0.conv2*", its activation and weight indicators are named "*module.layer2.0.conv2.quan_a_fn.s*" and "*module.layer2.0.conv2.quan_w_fn.s*", respectively. That means you can access all indicators with these orderly variable names.  
 
