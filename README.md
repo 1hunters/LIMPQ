@@ -1,8 +1,6 @@
-# LIMPQ (Mixed-Precision Neural Network Quantization via Learned Layer-wise Importance)
+# Mixed-Precision Neural Network Quantization via Learned Layer-wise Importance (LIMPQ), ECCV 2022
 
-Official implementation for paper "Mixed-Precision Neural Network Quantization via Learned Layer-wise Importance"
-
-
+Official implementation for paper "[Mixed-Precision Neural Network Quantization via Learned Layer-wise Importance](https://arxiv.org/pdf/2203.08368.pdf)"
 
 ![](figures/1.png)
 
